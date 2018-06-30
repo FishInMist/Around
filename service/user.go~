@@ -65,26 +65,27 @@ func addUser(user User) bool {
 
 	termQuery := elastic.NewTermQuery("username", user.Username)
 	queryResult, err := es_client.Search().
-			    Index(INDEX).
-			    Query(termQuery).
-			    Pretty(true).
-			    Do()
+		Index(INDEX).
+		Query(termQuery).
+		Pretty(true).
+		Do()
 	if err != nil {
-		fmt.Printf("ES query fail %v\n", err)
-		return false
-	}
-	if queryResult.TotalHits() > 0 {
-		fmt.Printf("User %s already exists, cannot create duplicate users.\n", user.Username)
+		fmt.Printf("ES query failed %v\n", err)
 		return false
 	}
 
-	_, err := es_client.Index().
-		  Index(INDEX).
-		  Type(TYPE_USER).
-		  Id(user.Username).
-		  BodyJson(user).
-		  Refresh(true).
-		  Do()
+	if queryResult.TotalHits() > 0 {
+		fmt.Printf("User %s already exists, cannot create duplicate user.\n", user.Username)
+		return false
+	}
+
+	_, err = es_client.Index().
+		Index(INDEX).
+		Type(TYPE_USER).
+		Id(user.Username).
+		BodyJson(user).
+		Refresh(true).
+		Do()
 	if err != nil {
 		fmt.Printf("ES save user failed %v\n", err)
 		return false
